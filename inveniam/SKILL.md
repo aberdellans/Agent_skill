@@ -31,7 +31,7 @@ Each **Deal** also carries:
 
 - **Data artifacts** — structured data the platform's "datalab" pipeline extracted from documents.
 - **Document taxonomies** — classification metadata assigned to each document.
-- **Workflows** — one or more workflow instances, each with **tasks**; tasks have **checklists**, **RACI assignments** (Responsible / Accountable / Consulted / Informed), and **comments**.
+- **Workflows** — one or more workflow instances, each with **tasks**; tasks have **checklists**, **RACI assignments**, and **comments**. Inveniam's RACI buckets are *Responsible*, *Approver*, and *Informed* (not the classic Accountable/Consulted); `get_task` returns them under a `participants` object.
 
 Almost every tool is scoped by a `dealId` (a UUID), so obtain that first.
 
@@ -83,6 +83,7 @@ Two field-name quirks that cause real bugs:
 
 These come from actually driving the workflow API in earlier work — they are not obvious from the tool list:
 
+- **Single-task calls need the dealId in a header.** List endpoints carry `dealId` in the path, but the single-task, comment, checklist, and workflow-instance endpoints (`get_task`, `change_task_status`, `update_task_raci`, the `*_task_comment` tools, `update_checklist_item`, `get_workflow`) take it as a separate **`deal-id` HTTP header** against the V2 REST API, not in the path or query. Omit it and the call fails `404 "No dealId provided"`. The OpenAPI spec at `api.inveniam.app/v2/api/docs/` documents these endpoints with only their path IDs and never mentions the header, so do not treat that spec as complete here. A wrapper tool that takes a `taskId` but no `dealId` is broken for these calls.
 - **Templates are attach-only through the API.** `set_deal_workflow_templates` attaches or detaches *existing* templates on a deal — there is no API call to create or edit a template itself. Templates are authored by Inveniam staff via Admin Settings (an XLSX upload). Don't promise programmatic template authoring.
 - **RACI is role-bound in templates.** A template assigns each RACI slot to a *role* (e.g. Approver → Manager); the platform auto-resolves it to whoever holds that role on the deal. Changing a user's deal role can therefore change who is Responsible or Approver on its tasks.
 - **`update_task_raci`'s `changes` payload is undocumented.** There is no published schema for it. Before calling it, read the `raci` field from `get_task` and mirror that structure rather than guessing.
@@ -120,8 +121,8 @@ A provisioning quirk worth knowing: issuing API keys is **not** a permission on 
 - **Read the error body.** When a call fails, the error message includes the API's own explanation (for example, an invalid status value lists the valid ones). Use it to self-correct instead of guessing.
 - **Workflow comments are author-scoped.** You can edit or delete only a comment that the *same authenticated user* posted. An administrator cannot modify another user's comment — the API returns HTTP 400. Plan comment cleanup around who originally posted each one.
 - **File veracity is asynchronous.** `initiate_file_veracity_check` returns a `jobId`; poll `get_file_veracity_status` with it until the job resolves.
-- **Comment payloads are loosely shaped.** Prior direct-API work found the comment list under any of `items`, `comments`, or `data`, and individual comments using `content` or `body` for the text and `id` or `commentId` for the identifier — inspect the actual response rather than hard-coding one key. Comments are plain Markdown with no structured/attestation field type, so any machine-readable data carried in a comment is formatted and parsed by convention.
-- **Top-level vs reply comments.** A reply carries a `parentId`; a top-level comment has none — filter on that when you want only original comments.
+- **Comment payloads are loosely shaped, so inspect the response.** A comment object keys its identifier as `id` (though `create_task_comment` returns it as `commentId`) and its text as `content`, alongside `parentId`, a `createdBy` user object, `createdAt`, and structured `mentions` and `replies` arrays. The list response is inconsistent: it has come back wrapped under `items`/`comments`/`data`, and as a bare object for a single comment. Inspect what you get rather than hard-coding one shape. The body text is Markdown, but `mentions` is a real structured field, so @-mentions are not purely a text convention.
+- **Top-level vs reply comments.** A reply carries a `parentId`; a top-level comment has none and exposes its replies under a `replies` array. Filter on `parentId` when you want only original comments.
 
 ## Common recipes
 

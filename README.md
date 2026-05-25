@@ -24,16 +24,19 @@ git clone https://github.com/aberdellans/Agent_skill.git
 
 (No git? Use GitHub's **Code → Download ZIP** button instead.)
 
-Then place the `inveniam` folder where your host looks for skills:
+Then load the `inveniam` folder into your agent host. Each host has its own subscription requirements — confirm yours is supported before installing.
 
-**Claude Code**
+**Claude (claude.ai chat)** — available on Free, Pro, Max, Team, and Enterprise plans
+No terminal needed. Zip the `inveniam` folder, then upload it via **Customize → Skills → New skill → Upload from your computer** in claude.ai. Team and Enterprise admins can also publish it organization-wide.
+
+**Claude Code** — requires a Pro, Max, Team, or Enterprise plan (or Claude API access)
 ```bash
 mkdir -p ~/.claude/skills
 cp -r Agent_skill/inveniam ~/.claude/skills/
 ```
 Start a new session — skills are loaded when a session begins.
 
-**OpenAI Codex**
+**OpenAI Codex** — available with any Codex-supporting OpenAI plan
 Codex scans `.agents/skills/` directories. Copy the folder into the user-level one (available everywhere), or a repo-level `.agents/skills/` for a single project:
 ```bash
 mkdir -p ~/.agents/skills
@@ -41,8 +44,8 @@ cp -r Agent_skill/inveniam ~/.agents/skills/
 ```
 Codex detects it automatically; restart Codex if it doesn't appear.
 
-**ChatGPT**
-ChatGPT supports Skills under the same open standard. Upload the `inveniam` skill — zipping the folder if an archive is required — following OpenAI's current [ChatGPT Skills instructions](https://help.openai.com/en/articles/20001066).
+**ChatGPT** — Skills are in beta on Business, Enterprise, Edu, Teachers, and Healthcare plans (not available on Free, Plus, or Pro)
+Upload the `inveniam` skill — zipping the folder if an archive is required — following OpenAI's current [ChatGPT Skills instructions](https://help.openai.com/en/articles/20001066).
 
 ## Using it
 

@@ -9,13 +9,11 @@ This skill helps an AI agent operate the **Inveniam.io platform** — investment
 
 ## Reaching the platform — which interface to use
 
-There are three ways an agent can drive the Inveniam platform. Prefer them in this order:
+There are two ways an agent can drive the Inveniam platform. Prefer them in this order:
 
-1. **The official Inveniam MCP server — use this when it is available.** Inveniam is building a first-party, hosted MCP server that wraps the platform API. As of May 2026 it is in active development and partial rollout: authentication and the core deal/organization tooling are well along, workflow and settings coverage is still in progress, and it is not yet generally available. When it ships, prefer it over anything local — it is first-party (kept in sync as the API evolves), hosted with proper OAuth, and, being a remote server, usable from any agent host that supports remote MCP connectors rather than only a local install. Confirm its current availability and connection details with Inveniam.
+1. **The official Inveniam MCP server — use this when it is available.** Inveniam is building a first-party, hosted MCP server that wraps the platform API. As of May 2026 it is in active development and partial rollout: authentication and the core deal/organization tooling are well along, workflow and settings coverage is still in progress, and it is not yet generally available. When it ships, prefer it as your access path — it is first-party (kept in sync as the API evolves), hosted with proper OAuth, and, being a remote server, usable from any agent host that supports remote MCP connectors. Confirm its current availability and connection details with Inveniam.
 
 2. **The Inveniam V2 REST API, directly.** The platform API is documented, and an agent that can make authenticated HTTP calls can use it with no MCP server at all. Auth is a two-step exchange: trade the API key plus a long-lived token for a short-lived JWT, then send that JWT as a bearer token. This path is always available, and it is the ground truth that every MCP server merely wraps.
-
-3. **A local stopgap MCP server (e.g. `inveniam-mcp`).** A self-hosted wrapper that re-exposes the V2 API as MCP tools. It works today and is fine for a local-agent host that can launch a local process, but treat it as a **stopgap until the official MCP ships**: it is local-only (a cloud-hosted agent cannot reach it), it must be maintained by hand as the API changes, and it will be superseded by — and is inferior to — the first-party server. Don't build long-term tooling around it. To troubleshoot one: it is registered in the host's MCP configuration; if its tools are missing, or every call returns HTTP 401, the server process or its credentials file is what to check — not the tool arguments.
 
 **A note on tool names.** The names used throughout this skill (`list_deals`, `get_deal`, `change_task_status`, …) are operation-level names typical of a wrapper. The official MCP will expose equivalent operations under its own names, and against the REST API they map to `/v2/...` endpoints. What is stable — and what this skill is really about — is the *operations and the platform's behavior*, not the surface you call them through.
 
@@ -109,8 +107,7 @@ Some operations are destructive or change access: deleting a deal, portfolio, or
 The rule is the same however you reach the API: **preview, get explicit user approval, then act.** Describe exactly what will be deleted or changed, wait for the user to approve that specific action, and only then make the call. *How* that rule is backed up differs by interface:
 
 - **Direct REST API** — there is no safety gate; a `DELETE` request executes immediately. You must do the preview-and-confirm step yourself before issuing it.
-- **The local `inveniam-mcp` wrapper** — implements a gate: its destructive tools take a `confirm=True` argument and return a harmless preview unless it is set. That flag is a feature of the wrapper, not of the platform — don't assume it exists on other interfaces.
-- **An official or other MCP server** — check its own documentation for whether and how it gates destructive calls; don't assume.
+- **An MCP server** — check its own documentation for whether and how it gates destructive calls; some wrappers add a `confirm` flag or similar, but don't assume.
 
 Either way, the burden is on you to confirm intent before any destructive or permission-changing call.
 

@@ -13,7 +13,7 @@ There are two ways an agent can drive the Inveniam platform. Prefer them in this
 
 1. **The official Inveniam MCP server — use this when it is available.** Inveniam is building a first-party, hosted MCP server that wraps the platform API. As of May 2026 it is in active development and partial rollout: authentication and the core deal/organization tooling are well along, workflow and settings coverage is still in progress, and it is not yet generally available. When it ships, prefer it as your access path — it is first-party (kept in sync as the API evolves), hosted with proper OAuth, and, being a remote server, usable from any agent host that supports remote MCP connectors. Confirm its current availability and connection details with Inveniam.
 
-2. **The Inveniam V2 REST API, directly.** The platform API is documented, and an agent that can make authenticated HTTP calls can use it with no MCP server at all. Auth is a two-step exchange: trade the API key plus a long-lived token for a short-lived JWT, then send that JWT as a bearer token. This path is always available, and it is the ground truth that every MCP server merely wraps.
+2. **The Inveniam V2 REST API, directly.** The platform API is documented, and an agent that can make authenticated HTTP calls can use it with no MCP server at all. Auth is a two-step exchange: trade the API key plus a long-lived token for a short-lived JWT, then send that JWT as a bearer token. This path is always available, and it is the ground truth that every MCP server merely wraps. **Obtaining the key/token pair has a current quirk** — the V2 UI can mint API keys but not the matching tokens; see the provisioning notes near the end of this skill for how to get a working pair.
 
 **A note on tool names.** The names used throughout this skill (`list_deals`, `get_deal`, `change_task_status`, …) are operation-level names typical of a wrapper. The official MCP will expose equivalent operations under its own names, and against the REST API they map to `/v2/...` endpoints. What is stable — and what this skill is really about — is the *operations and the platform's behavior*, not the surface you call them through.
 
@@ -111,7 +111,11 @@ The rule is the same however you reach the API: **preview, get explicit user app
 
 Either way, the burden is on you to confirm intent before any destructive or permission-changing call.
 
-A provisioning quirk worth knowing: issuing API keys is **not** a permission on the default **Manager** role — among the built-in roles it sits only on **Administrator**, which is far too broad to grant a counterparty or an external agent account. To give someone API access without making them an admin, assign them a custom role that carries the API-key permission, alongside whatever functional role they need (e.g. Manager on the deal). The built-in roles are org-wide and typically can't be edited, so an additive custom role is the way to keep the blast radius tight.
+Two provisioning quirks worth knowing.
+
+First, issuing API keys is **not** a permission on the default **Manager** role — among the built-in roles it sits only on **Administrator**, which is far too broad to grant a counterparty or an external agent account. To give someone API access without making them an admin, assign them a custom role that carries the API-key permission, alongside whatever functional role they need (e.g. Manager on the deal). The built-in roles are org-wide and typically can't be edited, so an additive custom role is the way to keep the blast radius tight.
+
+Second, as of May 2026 the V2 platform UI (the default) can issue API **keys** but not the matching API **tokens** — token generation is on the V2 Sprint 3 roadmap and not yet shipped. To mint a token today, log into the V1 legacy interface (e.g. `demo-v1.inveniam.io` for the demo environment, the V1 equivalent for other environments) and create the token there. Keys and tokens are interchangeable across V1 and V2, so a pair minted in V1 authenticates fine against V2 endpoints. If a user has an API key but auth calls fail with HTTP 401, the most likely cause is that the matching token was never created in V1.
 
 ## Gotchas
 
